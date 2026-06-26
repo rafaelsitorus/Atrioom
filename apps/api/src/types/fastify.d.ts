@@ -16,3 +16,10 @@ declare module "fastify" {
     requireAuth: (request: FastifyRequest) => Promise<void>;
   }
 }
+
+// @fastify/multipart: tambah `request.file()` dan `request.parts()`
+declare module "fastify" {
+  interface FastifyRequest {
+    file: () => Promise<import("@fastify/multipart").MultipartFile | undefined>;
+  }
+}

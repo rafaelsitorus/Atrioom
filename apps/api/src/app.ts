@@ -2,10 +2,13 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
+import multipart from "@fastify/multipart";
 import { env, allowedOrigins } from "./config/env";
 import authPlugin from "./plugins/auth.plugin";
 import errorPlugin from "./plugins/error.plugin";
 import authRoutes from "./modules/auth/auth.routes";
+import eventRoutes from "./modules/event/event.routes";
+import guestRoutes from "./modules/guest/guest.routes";
 
 export async function buildApp() {
   const app = Fastify({
@@ -31,6 +34,11 @@ export async function buildApp() {
     credentials: true,
   });
 
+  // Multipart — untuk upload Excel (EPIC01)
+  await app.register(multipart, {
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  });
+
   // Plugins
   await app.register(errorPlugin);
   await app.register(authPlugin);
@@ -38,6 +46,8 @@ export async function buildApp() {
   // Routes
   app.get("/health", async () => ({ status: "ok", ts: new Date().toISOString() }));
   await app.register(authRoutes);
+  await app.register(eventRoutes);
+  await app.register(guestRoutes);
 
   return app;
 }
