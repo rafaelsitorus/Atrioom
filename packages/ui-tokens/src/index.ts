@@ -1,0 +1,1 @@
+export { default as atrioomPreset } from "./tailwind.preset";
