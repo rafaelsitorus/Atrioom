@@ -1,0 +1,29 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# next.js
+apps/web/.next/
+apps/web/out/
+
+# node api
+apps/api/dist/
+apps/api/coverage/
+
+# env
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# os / editor
+.DS_Store
+.vscode/*
+!.vscode/settings.json
+.idea/
+
+# logs
+*.log
+
+# turbo
+.turbo/
