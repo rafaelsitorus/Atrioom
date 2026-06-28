@@ -9,6 +9,7 @@ import errorPlugin from "./plugins/error.plugin";
 import authRoutes from "./modules/auth/auth.routes";
 import eventRoutes from "./modules/event/event.routes";
 import guestRoutes from "./modules/guest/guest.routes";
+import seatingRoutes from "./modules/seating/seating.routes";
 
 export async function buildApp() {
   const app = Fastify({
@@ -48,6 +49,7 @@ export async function buildApp() {
   await app.register(authRoutes);
   await app.register(eventRoutes);
   await app.register(guestRoutes);
+  await app.register(seatingRoutes);
 
   return app;
 }
