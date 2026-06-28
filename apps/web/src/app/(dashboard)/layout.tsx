@@ -5,7 +5,7 @@ import { LogoutButton } from "@/components/layout/LogoutButton";
 // Item navigasi — akan ditambah per EPIC berikutnya
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Overview", code: "01" },
-  { href: "/dashboard/events", label: "Events", code: "02" },
+  { href: "/events", label: "Events", code: "02" },
   { href: "/dashboard/live", label: "Live", code: "03" },
   { href: "/dashboard/reports", label: "Reports", code: "04" },
 ];
