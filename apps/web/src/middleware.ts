@@ -18,6 +18,8 @@ function isPublic(pathname: string): boolean {
   if (pathname.startsWith("/_next")) return true;
   if (pathname.startsWith("/icons")) return true;
   if (pathname.startsWith("/manifest")) return true;
+  // Public ticket page (EPIC03) — tamu buka tanpa login
+  if (pathname.startsWith("/ticket/")) return true;
   return false;
 }
 

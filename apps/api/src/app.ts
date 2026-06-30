@@ -10,6 +10,8 @@ import authRoutes from "./modules/auth/auth.routes";
 import eventRoutes from "./modules/event/event.routes";
 import guestRoutes from "./modules/guest/guest.routes";
 import seatingRoutes from "./modules/seating/seating.routes";
+import checkinRoutes from "./modules/checkin/checkin.routes";
+import publicTicketRoutes from "./modules/checkin/public-ticket.route";
 
 export async function buildApp() {
   const app = Fastify({
@@ -50,6 +52,8 @@ export async function buildApp() {
   await app.register(eventRoutes);
   await app.register(guestRoutes);
   await app.register(seatingRoutes);
+  await app.register(checkinRoutes);
+  await app.register(publicTicketRoutes);
 
   return app;
 }
