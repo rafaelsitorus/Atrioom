@@ -13,6 +13,7 @@ import seatingRoutes from "./modules/seating/seating.routes";
 import checkinRoutes from "./modules/checkin/checkin.routes";
 import publicTicketRoutes from "./modules/checkin/public-ticket.route";
 import offlineRoutes from "./modules/offline/offline.routes";
+import reportingRoutes from "./modules/reporting/reporting.routes";
 
 export async function buildApp() {
   const app = Fastify({
@@ -56,6 +57,7 @@ export async function buildApp() {
   await app.register(checkinRoutes);
   await app.register(publicTicketRoutes);
   await app.register(offlineRoutes);
+  await app.register(reportingRoutes);
 
   return app;
 }
