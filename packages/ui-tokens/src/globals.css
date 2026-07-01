@@ -1,0 +1,44 @@
+/* Design tokens — salin dari Atrioom Company Profile/src/app/globals.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+html,
+body {
+  background: #000;
+  color: #fff;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: var(--font-body), "Barlow", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Heavy Frosted Glass — dipakai di kartu login & dashboard panels */
+.heavy-frosted-glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(48px);
+  -webkit-backdrop-filter: blur(48px);
+  transform: translateZ(0);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hierarki opasitas teks ala aerospace/kokpit */
+.text-cockpit-100 { color: rgba(255, 255, 255, 1.00); }
+.text-cockpit-80  { color: rgba(255, 255, 255, 0.80); }
+.text-cockpit-60  { color: rgba(255, 255, 255, 0.60); }
+.text-cockpit-40  { color: rgba(255, 255, 255, 0.40); }
+.text-cockpit-20  { color: rgba(255, 255, 255, 0.20); }
+
+.border-cockpit-10 { border-color: rgba(255, 255, 255, 0.10); }
+.border-cockpit-20 { border-color: rgba(255, 255, 255, 0.20); }

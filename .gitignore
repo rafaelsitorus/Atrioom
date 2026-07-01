@@ -26,4 +26,7 @@ apps/api/coverage/
 *.log
 
 # turbo
-.turbo/
+.turbo/tsconfig.tsbuildinfo
+apps/web/.next
+*.tsbuildinfo
+public/sw.js
