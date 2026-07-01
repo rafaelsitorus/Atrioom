@@ -5,6 +5,18 @@ Target: **20-30 menit** dari nol sampai URL production bisa dibuka.
 
 > **TL;DR:** Setup Supabase → Deploy API ke Render → Deploy Web ke Vercel → Set CORS → Smoke test.
 
+## 📌 Catatan Penting tentang CI/CD
+
+Dokumen ini **secara native pakai auto-deploy bawaan Vercel + Render** (bukan GitHub Actions).
+Anda **tidak perlu setup CI/CD manual** — keduanya otomatis re-deploy setiap push ke branch yang Anda pilih.
+
+**Kenapa tidak pakai GitHub Actions?**
+- Vercel & Render sudah punya Git integration built-in
+- Tidak perlu bayar GitHub Actions minutes
+- Lebih simpel — push code, otomatis deploy
+
+Kalau Anda nanti sudah punya budget GitHub Actions, bisa tambahkan `.github/workflows/` nanti.
+
 ---
 
 ## 📋 Prerequisites
@@ -131,37 +143,24 @@ Sekarang web sudah punya URL. Set `ALLOWED_ORIGINS` di Render:
 
 ---
 
-## Step 5 — Setup GitHub Actions untuk Auto-Deploy (Opsional, 5 menit)
+## Step 5 — Auto-Deploy Native (Otomatis, 0 setup)
 
-Supaya setiap push ke `staging` otomatis deploy.
+Anda **tidak perlu setup apa-apa**. Vercel dan Render sudah punya git integration bawaan:
 
-### 5.1 Vercel Token
-- Buka https://vercel.com/account/tokens → **Create Token** → beri nama `atrioom-deploy`
-- Copy token → simpan
+### Vercel
+- Setiap push ke branch `staging` (atau branch yang Anda pilih di Vercel dashboard)
+- → Otomatis trigger build & deploy
+- → URL baru live dalam ~2-3 menit
+- → Cek tab **Deployments** di Vercel dashboard
 
-### 5.2 Vercel Project ID
-- Vercel Dashboard → Project Settings → **General** → catat **Project ID**
+### Render
+- Setiap push ke branch `staging`
+- → Otomatis trigger build & deploy via `autoDeploy: true` di `render.yaml`
+- → Cek tab **Events** di Render dashboard
 
-### 5.3 Vercel Org ID
-- Vercel Dashboard → Team Settings → **General** → catat **Team ID** (= Org ID)
-
-### 5.4 GitHub Secrets
-- Pergi ke repo GitHub → **Settings → Secrets and variables → Actions → New repository secret**
-- Tambahkan secrets ini satu-satu:
-
-| Name | Value |
-|---|---|
-| `VERCEL_TOKEN` | `<dari 5.1>` |
-| `VERCEL_ORG_ID` | `<dari 5.3>` |
-| `VERCEL_PROJECT_ID` | `<dari 5.2>` |
-| `NEXT_PUBLIC_SUPABASE_URL` | `<dari Step 1.2>` |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `<dari Step 1.2>` |
-| `INTERNAL_API_BASE_URL` | `https://atrioom-api.onrender.com` |
-| `RENDER_DEPLOY_HOOK_URL` | `<dari Step 2.5>` (kosongkan jika tidak pakai) |
-
-### 5.5 Trigger Pertama
-- Push branch staging ke GitHub: `git push origin staging`
-- Tab **Actions** → lihat workflow jalan
+### Skip GitHub Actions
+Kami sengaja **tidak** pakai GitHub Actions untuk menghemat minutes (Actions berbayar setelah free tier).
+Vercel + Render auto-deploy sudah cukup untuk SaaS skala kami.
 
 ---
 
