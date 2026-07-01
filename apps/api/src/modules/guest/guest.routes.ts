@@ -1,5 +1,4 @@
 // Routes untuk Guest module.
-import "../../types/fastify";
 import type { FastifyPluginAsync } from "fastify";
 import { guestService } from "./guest.service.js";
 import { z } from "zod";

@@ -1,5 +1,4 @@
 // Routes check-in.
-import "../../types/fastify";
 import type { FastifyPluginAsync } from "fastify";
 import { checkinService } from "./checkin.service.js";
 import { UnauthorizedError } from "../../shared/errors.js";

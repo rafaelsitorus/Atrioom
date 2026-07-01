@@ -1,5 +1,4 @@
 // Routes untuk Event module — semua butuh auth.
-import "../../types/fastify";
 import type { FastifyPluginAsync } from "fastify";
 import { eventService } from "./event.service.js";
 import { UnauthorizedError } from "../../shared/errors.js";

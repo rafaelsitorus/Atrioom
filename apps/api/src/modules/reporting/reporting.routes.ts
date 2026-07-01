@@ -1,5 +1,4 @@
 // Routes Reporting — semua butuh auth.
-import "../../types/fastify";
 import type { FastifyPluginAsync } from "fastify";
 import { reportingService } from "./reporting.service.js";
 

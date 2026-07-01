@@ -1,5 +1,4 @@
 // Routes untuk Seating module.
-import "../../types/fastify";
 import type { FastifyPluginAsync } from "fastify";
 import { seatingService } from "./seating.service.js";
 import { UnauthorizedError } from "../../shared/errors.js";
