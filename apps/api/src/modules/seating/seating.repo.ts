@@ -1,6 +1,6 @@
 // Seating repository — service-role ke Supabase.
 import { getSupabaseAdmin } from "../../config/supabase.js";
-import type { TableRow, SeatRow, SeatAssignmentRow, SeatingAuditRow } from "./seating.types.js";
+import type { TableRow, SeatRow, SeatAssignmentRow, SeatingAuditRow } from "./seating.types";
 
 export const seatingRepo = {
   // ── Tables ───────────────────────────────────────────────────────────────

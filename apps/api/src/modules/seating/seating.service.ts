@@ -2,7 +2,7 @@
 import { z } from "zod";
 import { seatingRepo } from "./seating.repo.js";
 import { ConflictError, NotFoundError, ValidationError } from "../../shared/errors.js";
-import type { SeatingAction } from "./seating.types.js";
+import type { SeatingAction } from "./seating.types";
 
 const idSchema = z.string().uuid();
 

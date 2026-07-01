@@ -1,8 +1,8 @@
 // Check-In repo — service-role, optimized untuk <50ms hot path.
 import { createHash, randomUUID } from "node:crypto";
 import { getSupabaseAdmin } from "../../config/supabase.js";
-import type { GuestCategory } from "../guest/guest.types.js";
-import type { CheckInRow, CheckInResult } from "./checkin.types.js";
+import type { GuestCategory } from "../guest/guest.types";
+import type { CheckInRow, CheckInResult } from "./checkin.types";
 
 export interface CheckInInsertInput {
   event_id: string;

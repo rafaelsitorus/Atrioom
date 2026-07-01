@@ -7,7 +7,7 @@ import { z } from "zod";
 import { checkinRepo, makeIdempotencyKey } from "./checkin.repo.js";
 import { guestRepo } from "../guest/guest.repo.js";
 import { ConflictError, NotFoundError, ValidationError } from "../../shared/errors.js";
-import type { CheckInConfirmation } from "./checkin.types.js";
+import type { CheckInConfirmation } from "./checkin.types";
 
 const checkinByQrSchema = z.object({
   qrToken: z.string().min(8),

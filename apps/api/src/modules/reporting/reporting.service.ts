@@ -2,7 +2,7 @@
 import ExcelJS from "exceljs";
 import { z } from "zod";
 import { reportingRepo } from "./reporting.repo.js";
-import type { EventSummary } from "./reporting.types.js";
+import type { EventSummary } from "./reporting.types";
 
 const idSchema = z.string().uuid();
 

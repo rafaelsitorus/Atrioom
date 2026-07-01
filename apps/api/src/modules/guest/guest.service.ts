@@ -3,7 +3,7 @@ import { z } from "zod";
 import { guestRepo } from "./guest.repo.js";
 import { parseXlsx, generateQrToken, type ColumnMapping } from "./excel-parser.js";
 import { NotFoundError, ValidationError } from "../../shared/errors.js";
-import type { GuestInsert, GuestUpdate, GuestRow } from "./guest.types.js";
+import type { GuestInsert, GuestUpdate, GuestRow } from "./guest.types";
 
 const idSchema = z.string().uuid();
 

@@ -1,5 +1,5 @@
 // Tipe Reporting — output shapes untuk dashboard & exports.
-import type { GuestCategory } from "../guest/guest.types.js";
+import type { GuestCategory } from "../guest/guest.types";
 
 export interface AttendanceSummary {
   total_guests: number;

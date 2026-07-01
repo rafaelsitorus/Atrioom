@@ -1,6 +1,6 @@
 // Guest repository — pakai service-role.
 import { getSupabaseAdmin } from "../../config/supabase.js";
-import type { GuestRow, GuestInsert, GuestUpdate } from "./guest.types.js";
+import type { GuestRow, GuestInsert, GuestUpdate } from "./guest.types";
 
 const SELECT_COLS = "id,event_id,full_name,email,phone,category,is_vip,qr_token,plus_one_count,diet_notes,checked_in_at,checked_in_by,source,notes,created_at,updated_at,row_version,deleted_at";
 

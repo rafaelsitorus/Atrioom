@@ -1,7 +1,7 @@
 // Event repository — akses Supabase via service-role (server-side).
 // Frontend tidak boleh pakai service-role; hanya apps/api.
 import { getSupabaseAdmin } from "../../config/supabase.js";
-import type { EventRow, EventInsert, EventUpdate } from "./event.types.js";
+import type { EventRow, EventInsert, EventUpdate } from "./event.types";
 
 export const eventRepo = {
   async list(filter: { orgId?: string; status?: string; includeArchived?: boolean }): Promise<EventRow[]> {
