@@ -48,8 +48,11 @@ export async function middleware(request: NextRequest) {
 }
 
 // Jalankan di semua route KECUALI static asset & API internal.
+// Pakai runtime Node.js (bukan Edge) agar kompatibel dengan @supabase/ssr
+// yang punya dependencies Node-specific saat refresh session.
 export const config = {
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|icons|manifest.webmanifest|sw.js).*)",
   ],
+  runtime: "nodejs",
 };
