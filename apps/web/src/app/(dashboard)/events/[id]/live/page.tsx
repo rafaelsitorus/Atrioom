@@ -2,7 +2,7 @@
 // Tampilkan counter + recent activity. Ini adalah stub untuk EPIC05 nanti.
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { api } from "@/lib/api-client";
+import { serverApi } from "@/lib/server-api";
 import type { EventRow } from "@/lib/types";
 import { LiveDashboardView } from "@/modules/checkin/scanner/LiveDashboardView";
 
@@ -16,7 +16,7 @@ export default async function LivePage({ params }: PageProps) {
 
   let event: EventRow | null = null;
   try {
-    event = await api.get<EventRow>(`/v1/events/${id}`);
+    event = await serverApi.get<EventRow>(`/v1/events/${id}`);
   } catch { notFound(); }
   if (!event) notFound();
 

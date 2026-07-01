@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { api } from "@/lib/api-client";
+import { serverApi } from "@/lib/server-api";
 import type { EventRow, GuestRow } from "@/lib/types";
 import type { TableRow, SeatRow, AssignmentWithDetails, GuestLite } from "@/lib/types-seating";
 import { SeatingView } from "@/modules/seating/SeatingView";
@@ -19,12 +19,12 @@ export default async function SeatingPage({ params }: PageProps) {
   let guests: GuestLite[] = [];
 
   try {
-    event = await api.get<EventRow>(`/v1/events/${id}`);
+    event = await serverApi.get<EventRow>(`/v1/events/${id}`);
     const [tablesData, seatsData, assignmentsData, guestsData] = await Promise.all([
-      api.get<TableRow[]>(`/v1/events/${id}/tables`),
-      api.get<SeatRow[]>(`/v1/events/${id}/seats`),
-      api.get<AssignmentWithDetails[]>(`/v1/events/${id}/assignments`),
-      api.get<{ rows: GuestRow[]; total: number }>(`/v1/events/${id}/guests?limit=1000`),
+      serverApi.get<TableRow[]>(`/v1/events/${id}/tables`),
+      serverApi.get<SeatRow[]>(`/v1/events/${id}/seats`),
+      serverApi.get<AssignmentWithDetails[]>(`/v1/events/${id}/assignments`),
+      serverApi.get<{ rows: GuestRow[]; total: number }>(`/v1/events/${id}/guests?limit=1000`),
     ]);
     tables = tablesData;
     seats = seatsData;

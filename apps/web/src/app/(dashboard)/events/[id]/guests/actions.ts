@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { api } from "@/lib/api-client";
+import { serverApi } from "@/lib/server-api";
 
 const walkInSchema = {
   fullName: (v: FormDataEntryValue | null) => String(v ?? "").trim(),
@@ -22,11 +22,11 @@ export async function addWalkInAction(eventId: string, formData: FormData): Prom
     dietNotes: walkInSchema.diet(formData.get("dietNotes")) || undefined,
     source: "WALK_IN" as const,
   };
-  await api.post(`/v1/events/${eventId}/guests`, body);
+  await serverApi.post(`/v1/events/${eventId}/guests`, body);
   revalidatePath(`/events/${eventId}/guests`);
 }
 
 export async function deleteGuestAction(eventId: string, guestId: string): Promise<void> {
-  await api.delete(`/v1/guests/${guestId}`);
+  await serverApi.delete(`/v1/guests/${guestId}`);
   revalidatePath(`/events/${eventId}/guests`);
 }

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { api } from "@/lib/api-client";
+import { serverApi } from "@/lib/server-api";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { EventRow } from "@/lib/types";
 
@@ -52,7 +52,7 @@ export async function createEventAction(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Sesi habis. Silakan login ulang." };
 
-  const created = await api.post<EventRow>("/v1/events", {
+  const created = await serverApi.post<EventRow>("/v1/events", {
     orgId: user.id,        // sementara single-tenant
     name: parsed.data.name,
     venue: parsed.data.venue,
@@ -66,11 +66,11 @@ export async function createEventAction(
 }
 
 export async function archiveEventAction(id: string): Promise<void> {
-  await api.post(`/v1/events/${id}/archive`);
+  await serverApi.post(`/v1/events/${id}/archive`);
   revalidatePath("/events");
 }
 
 export async function duplicateEventAction(id: string, newName: string): Promise<void> {
-  await api.post(`/v1/events/${id}/duplicate`, { newName });
+  await serverApi.post(`/v1/events/${id}/duplicate`, { newName });
   revalidatePath("/events");
 }

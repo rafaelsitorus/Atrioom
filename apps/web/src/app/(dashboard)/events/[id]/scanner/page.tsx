@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cookies, headers } from "next/headers";
 import { createHash } from "node:crypto";
-import { api } from "@/lib/api-client";
+import { serverApi } from "@/lib/server-api";
 import type { EventRow } from "@/lib/types";
 import { ScannerView } from "@/modules/checkin/scanner/ScannerView";
 
@@ -16,7 +16,7 @@ export default async function ScannerPage({ params }: PageProps) {
 
   let event: EventRow | null = null;
   try {
-    event = await api.get<EventRow>(`/v1/events/${id}`);
+    event = await serverApi.get<EventRow>(`/v1/events/${id}`);
   } catch {
     notFound();
   }

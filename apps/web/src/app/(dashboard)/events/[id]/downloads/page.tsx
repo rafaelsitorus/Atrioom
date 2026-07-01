@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { api } from "@/lib/api-client";
+import { serverApi } from "@/lib/server-api";
 import type { EventRow } from "@/lib/types";
 import { DownloadCenter } from "./DownloadCenter";
 
@@ -13,7 +13,7 @@ export default async function DownloadsPage({ params }: PageProps) {
   const { id } = await params;
   let event: EventRow | null = null;
   try {
-    event = await api.get<EventRow>(`/v1/events/${id}`);
+    event = await serverApi.get<EventRow>(`/v1/events/${id}`);
   } catch { notFound(); }
   if (!event) notFound();
 

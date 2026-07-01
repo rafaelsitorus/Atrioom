@@ -1,25 +1,21 @@
-// Client-side API wrapper. Aman dipakai dari "use client" components.
-// Pakai cookie-based session yang browser handle otomatis.
+// Server-side API wrapper. HANYA untuk dipakai di Server Components
+// atau Server Actions. Auto-forward Supabase session cookie.
 import { env } from "./env";
+import { headers as nextHeaders } from "next/headers";
+import { ApiError } from "./api-client";
 
-export class ApiError extends Error {
-  constructor(
-    public readonly status: number,
-    public readonly code: string,
-    message: string,
-    public readonly details?: unknown,
-  ) {
-    super(message);
-    this.name = "ApiError";
-  }
+async function getServerCookieHeader(): Promise<string> {
+  const h = await nextHeaders();
+  return h.get("cookie") ?? "";
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const cookieHeader = await getServerCookieHeader();
   const res = await fetch(`${env.INTERNAL_API_BASE_URL}${path}`, {
     ...init,
-    credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      ...(cookieHeader ? { cookie: cookieHeader } : {}),
       ...(init.headers ?? {}),
     },
   });
@@ -41,24 +37,9 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return body as T;
 }
 
-export const api = {
+export const serverApi = {
   get:    <T>(path: string) => request<T>(path, { method: "GET" }),
   post:   <T>(path: string, body?: unknown) => request<T>(path, { method: "POST", body: JSON.stringify(body) }),
   patch:  <T>(path: string, body?: unknown) => request<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
   delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
-  postForm: <T>(path: string, form: FormData) => {
-    return fetch(`${env.INTERNAL_API_BASE_URL}${path}`, {
-      method: "POST",
-      body: form,
-      credentials: "include",
-    }).then(async (res) => {
-      if (res.status === 204) return undefined as T;
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const err = (body as { error?: { code?: string; message?: string } }).error;
-        throw new ApiError(res.status, err?.code ?? "UNKNOWN", err?.message ?? "Upload failed");
-      }
-      return body as T;
-    });
-  },
 };

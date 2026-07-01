@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { api } from "@/lib/api-client";
+import { serverApi } from "@/lib/server-api";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { EventRow } from "@/lib/types";
 import { CreateEventButton } from "./CreateEventButton";
@@ -25,7 +25,7 @@ export default async function EventsPage() {
   // Sementara pakai user.id sebagai orgId (single-tenant mode)
   let events: EventRow[] = [];
   try {
-    events = await api.get<EventRow[]>(`/v1/events?orgId=${user.id}&includeArchived=false`);
+    events = await serverApi.get<EventRow[]>(`/v1/events?orgId=${user.id}&includeArchived=false`);
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error("Failed to fetch events:", e);

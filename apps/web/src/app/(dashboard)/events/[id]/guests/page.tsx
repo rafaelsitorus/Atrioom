@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { api } from "@/lib/api-client";
+import { serverApi } from "@/lib/server-api";
 import type { EventRow, GuestRow } from "@/lib/types";
 import { WalkInButton } from "./WalkInButton";
 import { ImportTrigger } from "./ImportTrigger";
@@ -23,8 +23,8 @@ export default async function GuestsPage({ params, searchParams }: PageProps) {
   let total = 0;
 
   try {
-    event = await api.get<EventRow>(`/v1/events/${id}`);
-    const res = await api.get<{ rows: GuestRow[]; total: number }>(
+    event = await serverApi.get<EventRow>(`/v1/events/${id}`);
+    const res = await serverApi.get<{ rows: GuestRow[]; total: number }>(
       `/v1/events/${id}/guests?limit=500${sp.cat ? `&category=${sp.cat}` : ""}${sp.q ? `&search=${encodeURIComponent(sp.q)}` : ""}`,
     );
     guests = res.rows;
