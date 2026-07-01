@@ -1,17 +1,20 @@
 "use client";
 
 // ScannerView — orchestrates QrScanner + CheckInModal + manual search.
-import { useState, useTransition } from "react";
+// EPIC04: pakai useOfflineScan untuk tahan network failure.
+import { useState, useTransition, useEffect } from "react";
 import { QrScanner } from "./QrScanner";
 import { CheckInModal } from "./CheckInModal";
 import { api, ApiError } from "@/lib/api-client";
 import { ToastStack, type ToastItem } from "./ToastStack";
 import { VipAlertChannel } from "./VipAlertChannel";
+import { useOfflineScan } from "@/modules/offline/useOfflineScan";
+import { runSyncOnce } from "@/modules/offline/sync-orchestrator";
 import type { CheckInConfirmation } from "@/lib/types-checkin";
 
 interface Props {
   eventId: string;
-  deviceFingerprint: string;        // passed dari server
+  deviceFingerprint: string;
 }
 
 export function ScannerView({ eventId, deviceFingerprint }: Props) {
@@ -20,8 +23,45 @@ export function ScannerView({ eventId, deviceFingerprint }: Props) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [manualQuery, setManualQuery] = useState("");
   const [manualPending, startManual] = useTransition();
+  const offlineScan = useOfflineScan({ eventId, deviceFingerprint });
+
+  // Boot sync orchestrator (import side-effects) + periodic re-sync
+  useEffect(() => {
+    void import("@/modules/offline/sync-orchestrator");
+    const id = setInterval(() => { void runSyncOnce(); }, 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   async function processScan(qrToken: string) {
+    // Offline-first path — tulis ke cache + queue jika offline;
+    // jika online, langsung ke API (fallback di dalam hook).
+    const offline = await offlineScan(qrToken);
+
+    if (offline.result === "SUCCESS_LOCAL" || offline.result === "QUEUED") {
+      const synthetic: CheckInConfirmation = {
+        result: "SUCCESS",
+        guest: offline.guest
+          ? {
+              id: offline.guest.id, full_name: offline.guest.full_name,
+              category: offline.guest.category, is_vip: offline.guest.is_vip,
+              diet_notes: offline.guest.diet_notes, plus_one_count: offline.guest.plus_one_count,
+              email: offline.guest.email, phone: offline.guest.phone,
+            }
+          : null,
+        seating: null,
+        checked_in_at: offline.checked_in_at,
+        previous_scan_at: null,
+        message: offline.message,
+      };
+      setConfirmation(synthetic);
+      setPaused(true);
+      pushToast(synthetic);
+      // Trigger immediate sync kalau online
+      if (navigator.onLine) void runSyncOnce();
+      return;
+    }
+
+    // Fallback ke API langsung kalau offline scan memberi NOT_FOUND & online
     try {
       const r = await api.post(`/v1/events/${eventId}/checkin`, {
         qrToken,
