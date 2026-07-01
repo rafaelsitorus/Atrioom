@@ -79,7 +79,11 @@ create trigger trg_assignments_bump
   for each row execute function public.fn_bump_row_version();
 
 -- ─── seating_audit (audit trail untuk undo) ────────────────────────────────
-create type public.seating_action as enum ('ASSIGN', 'UNASSIGN', 'MOVE');
+do $$ begin
+  if not exists (select 1 from pg_type where typname = 'seating_action') then
+    create type public.seating_action as enum ('ASSIGN', 'UNASSIGN', 'MOVE');
+  end if;
+end $$;
 
 create table if not exists public.seating_audit (
   id              bigserial primary key,
