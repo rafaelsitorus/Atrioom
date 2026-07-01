@@ -1,5 +1,5 @@
 # CI untuk semua PR ke staging/main.
-# Typecheck + build, tanpa deploy.
+# Job terpisah agar 1 gagal tidak memblokir yang lain.
 
 name: CI
 
@@ -7,17 +7,13 @@ on:
   pull_request:
     branches: [staging, main]
   push:
-    branches-ignore: [staging, main]    # push ke branch fitur lain juga CI
+    branches-ignore: [staging, main]
 
 jobs:
-  typecheck:
-    name: Typecheck (${{ matrix.package }})
+  typecheck-api:
+    name: Typecheck (api)
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    strategy:
-      fail-fast: false
-      matrix:
-        package: [api, web]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -28,13 +24,28 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @atrioom/${{ matrix.package }} typecheck
+      - run: pnpm --filter @atrioom/api typecheck
+
+  typecheck-web:
+    name: Typecheck (web)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @atrioom/web typecheck
 
   build-web:
     name: Build (web)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: typecheck
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -53,7 +64,7 @@ jobs:
           INTERNAL_API_BASE_URL: http://localhost:4000
         run: pnpm --filter @atrioom/web build
 
-  lint:
+  commitlint:
     name: Commit Lint
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -61,6 +72,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: wagoid/commitlint-github-action@v5
+      - uses: pnpm/action-setup@v4
         with:
-          configFile: .commitlintrc
+          version: 9.12.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Lint commits on push (all)
+        if: github.event_name == 'push'
+        run: npx commitlint --from=HEAD~10 --to=HEAD --verbose
+      - name: Lint commits on PR (vs base)
+        if: github.event_name == 'pull_request'
+        run: npx commitlint --from=${{ github.event.pull_request.base.sha }} --to=HEAD --verbose
