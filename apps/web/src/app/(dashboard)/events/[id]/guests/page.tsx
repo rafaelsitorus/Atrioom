@@ -68,6 +68,12 @@ export default async function GuestsPage({ params, searchParams }: PageProps) {
             >
               Readiness
             </Link>
+            <Link
+              href={`/events/${id}/reports`}
+              className="rounded-full border border-cockpit-20 bg-white/5 px-5 py-2.5 text-xs uppercase tracking-[0.25em] text-white/80 transition hover:bg-white/10"
+            >
+              Reports
+            </Link>
             <ImportTrigger eventId={id} />
             <WalkInButton eventId={id} />
           </div>
