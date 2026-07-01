@@ -1,16 +1,43 @@
 // Server-side API wrapper. HANYA untuk dipakai di Server Components
 // atau Server Actions. Auto-forward Supabase session cookie.
+//
+// Pakai `cookies()` dari next/headers (bukan headers().get('cookie'))
+// karena cookies() adalah API resmi Next.js untuk baca cookies di
+// Server Component. headers().get('cookie') sering return null di Vercel.
 import { env } from "./env";
-import { headers as nextHeaders } from "next/headers";
+import { cookies, headers as nextHeaders } from "next/headers";
 import { ApiError } from "./api-client";
 
-async function getServerCookieHeader(): Promise<string> {
-  const h = await nextHeaders();
-  return h.get("cookie") ?? "";
+function buildCookieHeader(): string {
+  // Gabungan cookies dari next/headers + raw 'cookie' header
+  // (fallback untuk environment tertentu).
+  const cookieStore = cookies();
+  const parts: string[] = [];
+
+  // Method 1: cookies() — official API, works di Vercel
+  try {
+    cookieStore.getAll().forEach((c) => {
+      parts.push(`${c.name}=${c.value}`);
+    });
+  } catch {
+    // Skip kalau bukan Server Component context
+  }
+
+  // Method 2: raw 'cookie' header fallback (beberapa env Vercel)
+  if (parts.length === 0) {
+    try {
+      const raw = nextHeaders().get("cookie");
+      if (raw) return raw;
+    } catch {
+      // ignore
+    }
+  }
+
+  return parts.join("; ");
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const cookieHeader = await getServerCookieHeader();
+  const cookieHeader = buildCookieHeader();
   const res = await fetch(`${env.INTERNAL_API_BASE_URL}${path}`, {
     ...init,
     headers: {
