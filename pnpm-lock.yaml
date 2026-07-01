@@ -22,6 +22,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.45.4
         version: 2.108.2
+      '@types/node':
+        specifier: ^20
+        version: 20.19.43
       exceljs:
         specifier: ^4.4.0
         version: 4.4.0
@@ -38,9 +41,6 @@ importers:
         specifier: ^3.23.8
         version: 3.25.76
     devDependencies:
-      '@types/node':
-        specifier: ^20
-        version: 20.19.43
       tsx:
         specifier: ^4.19.1
         version: 4.22.4
@@ -68,6 +68,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.45.4
         version: 2.108.2
+      '@types/node':
+        specifier: ^20
+        version: 20.19.43
       '@zxing/browser':
         specifier: ^0.1.5
         version: 0.1.5(@zxing/library@0.21.3)
@@ -111,9 +114,6 @@ importers:
       '@atrioom/ui-tokens':
         specifier: workspace:*
         version: link:../../packages/ui-tokens
-      '@types/node':
-        specifier: ^20
-        version: 20.19.43
       '@types/qrcode':
         specifier: ^1.5.5
         version: 1.5.6
