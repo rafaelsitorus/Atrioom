@@ -1,32 +1,64 @@
 // EPIC00 — Auth plugin untuk Fastify.
-// Memverifikasi JWT Supabase dari header Authorization, menempelkan user ke request.
-// Cara pakai:
-//   fastify.get('/v1/protected', { preHandler: fastify.requireAuth }, async (req) => {
-//     return { user: req.user };
-//   });
+// Mendukung 2 cara verifikasi:
+// 1. Authorization: Bearer <jwt>  (untuk client-side, scanner, dll)
+// 2. Cookie sb-*-auth-token      (untuk Server Component Next.js dengan
+//                                  @supabase/ssr yang forward cookie)
 import type { FastifyInstance, FastifyPluginAsync, FastifyRequest } from "fastify";
 import fp from "fastify-plugin";
 import { getSupabaseAdmin } from "../config/supabase.js";
 import { UnauthorizedError } from "../shared/errors.js";
 // Type augmentation ada di src/types/fastify.d.ts (auto-included oleh tsconfig).
 
+/**
+ * Extract access token dari cookie Supabase PKCE.
+ * Cookie name pattern: `sb-<project-ref>-auth-token`.
+ * Value-nya JSON-encoded: { access_token, refresh_token, expires_at, ... }.
+ */
+function extractTokenFromCookie(cookieHeader: string | undefined): string | null {
+  if (!cookieHeader) return null;
+  const cookies = cookieHeader.split(";");
+  for (const raw of cookies) {
+    const trimmed = raw.trim();
+    if (!trimmed.startsWith("sb-") || !trimmed.includes("-auth-token")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq < 0) continue;
+    const rawValue = decodeURIComponent(trimmed.slice(eq + 1));
+    try {
+      // Cookie value is JSON-encoded (URL-encoded outer wrap)
+      const parsed = JSON.parse(rawValue) as { access_token?: string };
+      if (parsed.access_token) return parsed.access_token;
+    } catch {
+      // Some Supabase versions store as plain JWT (base64url); try base64url
+      // decode prefix to validate. If it has 2 dots it's a JWT.
+      if (rawValue.split(".").length === 3) return rawValue;
+    }
+  }
+  return null;
+}
+
 const authPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) => {
-  // decorate: ambil & verifikasi token, set req.user
   fastify.decorateRequest("user", undefined);
 
   fastify.decorate("verifyJwt", async (request: FastifyRequest) => {
+    // 1) Prioritas: Authorization: Bearer <jwt>
     const header = request.headers.authorization ?? request.headers.Authorization;
-    if (!header || typeof header !== "string") {
-      throw new UnauthorizedError("Missing Authorization header.");
+    let token: string | null = null;
+
+    if (typeof header === "string" && header.toLowerCase().startsWith("bearer ")) {
+      token = header.slice(7).trim();
     }
 
-    const [scheme, token] = header.split(" ");
-    if (scheme?.toLowerCase() !== "bearer" || !token) {
-      throw new UnauthorizedError("Authorization header must use Bearer scheme.");
+    // 2) Fallback: cookie sb-*-auth-token
+    if (!token) {
+      const cookieHeader = request.headers.cookie;
+      token = extractTokenFromCookie(cookieHeader);
     }
 
-    // Pakai admin client HANYA untuk verifikasi signature & expiry.
-    // Kita tidak membaca data user via service-role ke tabel lain.
+    if (!token) {
+      throw new UnauthorizedError("Missing Authorization header or session cookie.");
+    }
+
+    // Verifikasi signature & expiry pakai admin client.
     const admin = getSupabaseAdmin();
     const { data, error } = await admin.auth.getUser(token);
 
@@ -41,7 +73,6 @@ const authPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     };
   });
 
-  // preHandler reusable untuk route yang butuh auth
   fastify.decorate("requireAuth", async (request: FastifyRequest) => {
     await fastify.verifyJwt(request);
   });

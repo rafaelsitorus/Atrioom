@@ -1,6 +1,8 @@
-// Thin fetch wrapper ke apps/api (Node.js). Cookies di-forward otomatis
-// (same-origin Next.js → Railway backend via INTERNAL_API_BASE_URL).
+// Thin fetch wrapper ke apps/api (Node.js).
+// Server-side: forward Supabase session sebagai Authorization: Bearer <jwt>.
+// Client-side: pakai cookie-based session (browser handle otomatis).
 import { env } from "./env";
+import { headers as nextHeaders } from "next/headers";
 
 export class ApiError extends Error {
   constructor(
@@ -14,15 +16,33 @@ export class ApiError extends Error {
   }
 }
 
+async function getServerAuthHeader(): Promise<Record<string, string>> {
+  // Dipanggil hanya dari Server Components / Server Actions.
+  // Client components tidak akan masuk sini (mereka pakai cookie-based fetch).
+  try {
+    const h = await nextHeaders();
+    // @supabase/ssr menyimpan JWT di cookie `sb-<projectref>-auth-token`
+    // atau di custom header. Kita forward semua cookie sb-* yang ada.
+    const cookieHeader = h.get("cookie") ?? "";
+    return { cookie: cookieHeader };
+  } catch {
+    // Bukan Server Component (mis. dari Client Component) — skip
+    return {};
+  }
+}
+
 async function request<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<T> {
+  const extraHeaders = await getServerAuthHeader();
+
   const res = await fetch(`${env.INTERNAL_API_BASE_URL}${path}`, {
     ...init,
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      ...extraHeaders,
       ...(init.headers ?? {}),
     },
   });
@@ -50,7 +70,6 @@ export const api = {
   patch:  <T>(path: string, body?: unknown) => request<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
   delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
   postForm: <T>(path: string, form: FormData) => {
-    // Jangan set Content-Type — browser auto-generate boundary untuk multipart
     return fetch(`${env.INTERNAL_API_BASE_URL}${path}`, {
       method: "POST",
       body: form,
