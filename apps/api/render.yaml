@@ -1,0 +1,42 @@
+# Render Blueprint — Infrastructure-as-Code
+# Cara pakai: Render Dashboard → New + → Blueprint → connect repo ini
+# Render akan membaca file ini dan auto-create services + env groups.
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  # ── API (Fastify) ──────────────────────────────────────────────────────────
+  - type: web
+    name: atrioom-api
+    runtime: node
+    plan: starter                  # $7/bulan, tidak ada cold start. Free OK untuk dev.
+    region: singapore              # closest to Indonesia
+    branch: staging
+    rootDir: apps/api
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    startCommand: node dist/server.js
+    healthCheckPath: /health
+    autoDeploy: true               # re-deploy saat push ke staging
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+      - key: LOG_LEVEL
+        value: info
+      # ── Supabase ──  GANTI value di dashboard dengan kredensial asli Anda ──
+      - key: SUPABASE_URL
+        sync: false                # sync:false = tidak auto-set; Anda isi manual
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      # ── CORS ────────────────────────────────────────────────────────────────
+      # Diisi manual setelah web deploy, dengan URL Vercel yang sebenarnya.
+      # Contoh: https://atrioom-web.vercel.app
+      - key: ALLOWED_ORIGINS
+        sync: false
+
+  # ── Web (Next.js) TIDAK di sini — pakai Vercel (lihat apps/web/vercel.json) ──
+# Catatan:
+# - plan:free akan sleep setelah 15 menit idle → request pertama ~30-50s.
+#   Untuk operasional event hari-H, upgrade ke "starter" ($7/bln).
+# - rootDir auto-set working directory untuk build. Pastikan file ini di root repo.

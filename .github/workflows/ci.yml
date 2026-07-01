@@ -1,0 +1,66 @@
+# CI untuk semua PR ke staging/main.
+# Typecheck + build, tanpa deploy.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [staging, main]
+  push:
+    branches-ignore: [staging, main]    # push ke branch fitur lain juga CI
+
+jobs:
+  typecheck:
+    name: Typecheck (${{ matrix.package }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [api, web]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @atrioom/${{ matrix.package }} typecheck
+
+  build-web:
+    name: Build (web)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: typecheck
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build
+        env:
+          # Placeholder — CI build tidak butuh kredensial asli
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key-for-ci-build-only
+          INTERNAL_API_BASE_URL: http://localhost:4000
+        run: pnpm --filter @atrioom/web build
+
+  lint:
+    name: Commit Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v5
+        with:
+          configFile: .commitlintrc

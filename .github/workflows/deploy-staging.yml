@@ -1,0 +1,135 @@
+# Auto-deploy ke Vercel (web) + Render (API) saat push ke staging.
+# Secrets yang dibutuhkan di GitHub repo Settings → Secrets:
+#   - VERCEL_TOKEN              (https://vercel.com/account/tokens)
+#   - VERCEL_ORG_ID             (tim Vercel ID)
+#   - VERCEL_PROJECT_ID         (project Vercel untuk apps/web)
+#   - RENDER_DEPLOY_HOOK_URL    (Render service Settings → Deploy Hook URL)
+#
+# Cara kerja:
+#   1. Push ke branch staging
+#   2. CI jalan: typecheck (web + api) + build (web)
+#   3. Deploy: Vercel CLI deploy + Render deploy-hook trigger
+#   4. Health check + notifikasi
+
+name: Deploy Staging
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:                       # manual trigger dari GitHub UI
+
+jobs:
+  # ── 1. Typecheck & Build ────────────────────────────────────────────────────
+  ci:
+    name: CI (typecheck + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install workspace deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (api)
+        run: pnpm --filter @atrioom/api typecheck
+
+      - name: Typecheck (web)
+        run: pnpm --filter @atrioom/web typecheck
+
+      - name: Build (web)
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          INTERNAL_API_BASE_URL: ${{ secrets.INTERNAL_API_BASE_URL }}
+        run: pnpm --filter @atrioom/web build
+
+  # ── 2. Deploy ke Vercel (web) ─────────────────────────────────────────────
+  deploy-vercel:
+    name: Deploy Web → Vercel
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel project info (untuk sinkronisasi env)
+        id: vercel-pull
+        working-directory: apps/web
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+
+      - name: Build untuk Vercel
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          INTERNAL_API_BASE_URL: ${{ secrets.INTERNAL_API_BASE_URL }}
+        run: vercel build --prod --token=$VERCEL_TOKEN
+
+      - name: Deploy ke Vercel
+        id: deploy
+        working-directory: apps/web
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN \
+            --confirm \
+            --target=production
+          echo "url=$(vercel ls --token=$VERCEL_TOKEN | head -n 1 | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+  # ── 3. Trigger Render Deploy (API) ────────────────────────────────────────
+  deploy-render:
+    name: Trigger API → Render
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Trigger Render deploy hook
+        if: ${{ secrets.RENDER_DEPLOY_HOOK_URL != '' }}
+        run: |
+          echo "Triggering Render deploy hook…"
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          echo "✅ Render deploy triggered."
+
+  # ── 4. Notifikasi (opsional) ──────────────────────────────────────────────
+  notify:
+    name: Notification
+    needs: [deploy-vercel, deploy-render]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Summary
+        run: |
+          echo "## 🚀 Deploy Staging Selesai" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Web**: ${{ steps.deploy.outputs.url || 'N/A' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **API**: Auto-deploy via Render hook" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Cek status: https://dashboard.render.com + https://vercel.com/dashboard" >> $GITHUB_STEP_SUMMARY
