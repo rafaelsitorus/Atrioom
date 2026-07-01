@@ -20,7 +20,7 @@ create table if not exists public.tables (
   deleted_at      timestamptz,
   unique (event_id, label)
 );
-create index idx_tables_event on public.tables (event_id) where deleted_at is null;
+create index if not exists idx_tables_event on public.tables (event_id) where deleted_at is null;
 
 drop trigger if exists trg_tables_bump on public.tables;
 create trigger trg_tables_bump
@@ -40,7 +40,7 @@ create table if not exists public.seats (
   deleted_at      timestamptz,
   unique (table_id, seat_label)
 );
-create index idx_seats_table on public.seats (table_id) where deleted_at is null;
+create index if not exists idx_seats_table on public.seats (table_id) where deleted_at is null;
 
 drop trigger if exists trg_seats_bump on public.seats;
 create trigger trg_seats_bump
@@ -71,7 +71,7 @@ create unique index if not exists uq_guest_active_assignment
   on public.seat_assignments (guest_id)
   where deleted_at is null;
 
-create index idx_assignments_event on public.seat_assignments (event_id) where deleted_at is null;
+create index if not exists idx_assignments_event on public.seat_assignments (event_id) where deleted_at is null;
 
 drop trigger if exists trg_assignments_bump on public.seat_assignments;
 create trigger trg_assignments_bump
@@ -97,7 +97,7 @@ create table if not exists public.seating_audit (
   undone_by       uuid
 );
 
-create index idx_audit_event_recent
+create index if not exists idx_audit_event_recent
   on public.seating_audit (event_id, created_at desc)
   where undone_at is null;
 

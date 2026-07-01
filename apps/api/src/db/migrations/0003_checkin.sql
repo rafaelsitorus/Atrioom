@@ -4,6 +4,9 @@
 --         check_in_audit (untuk VIP alert dashboard + audit trail)
 -- ============================================================================
 
+-- Cleanup: drop index bentrok dari run sebelumnya jika ada
+drop index if exists public.idx_audit_event_recent;
+
 -- ─── check_ins ────────────────────────────────────────────────────────────
 create type public.check_in_result as enum ('SUCCESS', 'ALREADY_CHECKED_IN', 'NOT_FOUND', 'WALK_IN');
 
@@ -56,10 +59,10 @@ create table if not exists public.check_in_audit (
   notification_sent boolean not null default false
 );
 
-create index idx_audit_event_recent
+create index if not exists idx_checkin_audit_event_recent
   on public.check_in_audit (event_id, scanned_at desc);
 
-create index idx_audit_vip_recent
+create index if not exists idx_checkin_audit_vip_recent
   on public.check_in_audit (event_id, scanned_at desc)
   where is_vip = true;
 
