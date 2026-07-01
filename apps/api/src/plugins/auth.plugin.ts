@@ -6,8 +6,8 @@
 //   });
 import type { FastifyInstance, FastifyPluginAsync, FastifyRequest } from "fastify";
 import fp from "fastify-plugin";
-import { getSupabaseAdmin } from "../config/supabase";
-import { UnauthorizedError } from "../shared/errors";
+import { getSupabaseAdmin } from "../config/supabase.js";
+import { UnauthorizedError } from "../shared/errors.js";
 // Type augmentation ada di src/types/fastify.d.ts (auto-included oleh tsconfig).
 
 const authPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) => {

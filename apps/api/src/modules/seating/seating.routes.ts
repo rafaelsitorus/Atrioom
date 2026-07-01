@@ -1,8 +1,8 @@
 // Routes untuk Seating module.
 import "../../types/fastify";
 import type { FastifyPluginAsync } from "fastify";
-import { seatingService } from "./seating.service";
-import { UnauthorizedError } from "../../shared/errors";
+import { seatingService } from "./seating.service.js";
+import { UnauthorizedError } from "../../shared/errors.js";
 import { z } from "zod";
 
 const createTableBody = z.object({

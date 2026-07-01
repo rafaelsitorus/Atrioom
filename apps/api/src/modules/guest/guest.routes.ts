@@ -1,9 +1,9 @@
 // Routes untuk Guest module.
 import "../../types/fastify";
 import type { FastifyPluginAsync } from "fastify";
-import { guestService } from "./guest.service";
+import { guestService } from "./guest.service.js";
 import { z } from "zod";
-import { ValidationError } from "../../shared/errors";
+import { ValidationError } from "../../shared/errors.js";
 
 const listQuerySchema = z.object({
   category: z.enum(["VVIP", "VIP", "MEDIA", "REGULER", "STAFF"]).optional(),

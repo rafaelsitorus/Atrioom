@@ -4,10 +4,10 @@
 //   - 1 scan dgn (deviceId, guestId, detik) yang sama → 1 row (DB UNIQUE).
 //   - Jika guest sudah SUCCESS sebelumnya → return ALREADY_CHECKED_IN.
 import { z } from "zod";
-import { checkinRepo, makeIdempotencyKey } from "./checkin.repo";
-import { guestRepo } from "../guest/guest.repo";
-import { ConflictError, NotFoundError, ValidationError } from "../../shared/errors";
-import type { CheckInConfirmation } from "./checkin.types";
+import { checkinRepo, makeIdempotencyKey } from "./checkin.repo.js";
+import { guestRepo } from "../guest/guest.repo.js";
+import { ConflictError, NotFoundError, ValidationError } from "../../shared/errors.js";
+import type { CheckInConfirmation } from "./checkin.types.js";
 
 const checkinByQrSchema = z.object({
   qrToken: z.string().min(8),

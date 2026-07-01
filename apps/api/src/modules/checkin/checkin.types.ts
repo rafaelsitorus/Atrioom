@@ -1,5 +1,5 @@
 // Tipe Check-In module.
-import type { GuestCategory } from "../guest/guest.types";
+import type { GuestCategory } from "../guest/guest.types.js";
 
 export type CheckInResult = "SUCCESS" | "ALREADY_CHECKED_IN" | "NOT_FOUND" | "WALK_IN";
 

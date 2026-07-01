@@ -1,8 +1,8 @@
 // Seating service — business logic + invariant enforcement + audit + undo.
 import { z } from "zod";
-import { seatingRepo } from "./seating.repo";
-import { ConflictError, NotFoundError, ValidationError } from "../../shared/errors";
-import type { SeatingAction } from "./seating.types";
+import { seatingRepo } from "./seating.repo.js";
+import { ConflictError, NotFoundError, ValidationError } from "../../shared/errors.js";
+import type { SeatingAction } from "./seating.types.js";
 
 const idSchema = z.string().uuid();
 

@@ -1,9 +1,9 @@
 // Guest service — CRUD + batch import + dedup lintas-batch.
 import { z } from "zod";
-import { guestRepo } from "./guest.repo";
-import { parseXlsx, generateQrToken, type ColumnMapping } from "./excel-parser";
-import { NotFoundError, ValidationError } from "../../shared/errors";
-import type { GuestInsert, GuestUpdate, GuestRow } from "./guest.types";
+import { guestRepo } from "./guest.repo.js";
+import { parseXlsx, generateQrToken, type ColumnMapping } from "./excel-parser.js";
+import { NotFoundError, ValidationError } from "../../shared/errors.js";
+import type { GuestInsert, GuestUpdate, GuestRow } from "./guest.types.js";
 
 const idSchema = z.string().uuid();
 

@@ -2,7 +2,7 @@
 // memvalidasi baris, dan mendeteksi duplikat.
 import ExcelJS from "exceljs";
 import { randomBytes } from "node:crypto";
-import type { GuestCategory } from "./guest.types";
+import type { GuestCategory } from "./guest.types.js";
 
 export interface ColumnMapping {
   fullName: string;      // header text dari Excel

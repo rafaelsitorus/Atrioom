@@ -1,7 +1,7 @@
 // Offline manifest endpoint — mengembalikan snapshot event untuk IndexedDB.
 // Dipanggil saat Front Desk tekan "Download Event".
 import type { FastifyPluginAsync } from "fastify";
-import { getSupabaseAdmin } from "../../config/supabase";
+import { getSupabaseAdmin } from "../../config/supabase.js";
 
 export const offlineRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(

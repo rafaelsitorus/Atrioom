@@ -1,7 +1,7 @@
 // Event service — orkestrasi business logic (validasi, duplikasi, dll).
 import { z } from "zod";
-import { eventRepo } from "./event.repo";
-import { NotFoundError } from "../../shared/errors";
+import { eventRepo } from "./event.repo.js";
+import { NotFoundError } from "../../shared/errors.js";
 
 const idSchema = z.string().uuid();
 

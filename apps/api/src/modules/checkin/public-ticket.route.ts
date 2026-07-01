@@ -1,8 +1,8 @@
 // Public ticket lookup — no auth, used by /ticket/[token] page.
 // Dipasang terpisah dari checkinRoutes (yang butuh auth).
 import type { FastifyPluginAsync } from "fastify";
-import { getSupabaseAdmin } from "../../config/supabase";
-import { NotFoundError } from "../../shared/errors";
+import { getSupabaseAdmin } from "../../config/supabase.js";
+import { NotFoundError } from "../../shared/errors.js";
 
 export const publicTicketRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/v1/public/ticket/:token", async (request) => {

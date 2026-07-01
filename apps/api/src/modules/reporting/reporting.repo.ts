@@ -1,6 +1,6 @@
 // Reporting repo — Supabase queries (service-role).
 // Semua query pakai filter event_id + tidak lewat RLS (server-side).
-import { getSupabaseAdmin } from "../../config/supabase";
+import { getSupabaseAdmin } from "../../config/supabase.js";
 import type {
   AttendanceSummary,
   CategoryBreakdown,
@@ -9,7 +9,7 @@ import type {
   VipAttendance,
   WalkInListItem,
   CheckInActivity,
-} from "./reporting.types";
+} from "./reporting.types.js";
 
 export const reportingRepo = {
   /** Aggregated attendance stats — 1 round-trip. */

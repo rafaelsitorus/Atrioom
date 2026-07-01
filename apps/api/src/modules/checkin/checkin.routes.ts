@@ -1,8 +1,8 @@
 // Routes check-in.
 import "../../types/fastify";
 import type { FastifyPluginAsync } from "fastify";
-import { checkinService } from "./checkin.service";
-import { UnauthorizedError } from "../../shared/errors";
+import { checkinService } from "./checkin.service.js";
+import { UnauthorizedError } from "../../shared/errors.js";
 
 export const checkinRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /v1/events/:eventId/checkin  — by QR scan

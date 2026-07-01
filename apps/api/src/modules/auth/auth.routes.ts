@@ -2,7 +2,7 @@
 // Endpoint publik minimal: /v1/auth/me untuk cek token masih valid.
 import "../../types/fastify";
 import type { FastifyPluginAsync } from "fastify";
-import { UnauthorizedError } from "../../shared/errors";
+import { UnauthorizedError } from "../../shared/errors.js";
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
   // Endpoint terproteksi — preHandler requireAuth sudah verifikasi token

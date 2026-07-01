@@ -1,7 +1,7 @@
 // Routes Reporting — semua butuh auth.
 import "../../types/fastify";
 import type { FastifyPluginAsync } from "fastify";
-import { reportingService } from "./reporting.service";
+import { reportingService } from "./reporting.service.js";
 
 export const reportingRoutes: FastifyPluginAsync = async (fastify) => {
   // Dashboard stats agregat

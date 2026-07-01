@@ -3,17 +3,17 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import multipart from "@fastify/multipart";
-import { env, allowedOrigins } from "./config/env";
-import authPlugin from "./plugins/auth.plugin";
-import errorPlugin from "./plugins/error.plugin";
-import authRoutes from "./modules/auth/auth.routes";
-import eventRoutes from "./modules/event/event.routes";
-import guestRoutes from "./modules/guest/guest.routes";
-import seatingRoutes from "./modules/seating/seating.routes";
-import checkinRoutes from "./modules/checkin/checkin.routes";
-import publicTicketRoutes from "./modules/checkin/public-ticket.route";
-import offlineRoutes from "./modules/offline/offline.routes";
-import reportingRoutes from "./modules/reporting/reporting.routes";
+import { env, allowedOrigins } from "./config/env.js";
+import authPlugin from "./plugins/auth.plugin.js";
+import errorPlugin from "./plugins/error.plugin.js";
+import authRoutes from "./modules/auth/auth.routes.js";
+import eventRoutes from "./modules/event/event.routes.js";
+import guestRoutes from "./modules/guest/guest.routes.js";
+import seatingRoutes from "./modules/seating/seating.routes.js";
+import checkinRoutes from "./modules/checkin/checkin.routes.js";
+import publicTicketRoutes from "./modules/checkin/public-ticket.route.js";
+import offlineRoutes from "./modules/offline/offline.routes.js";
+import reportingRoutes from "./modules/reporting/reporting.routes.js";
 
 export async function buildApp() {
   const app = Fastify({

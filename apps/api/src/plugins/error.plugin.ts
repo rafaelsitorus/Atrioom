@@ -1,7 +1,7 @@
 // Error handler — memetakan AppError ke status code yang konsisten.
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import fp from "fastify-plugin";
-import { AppError } from "../shared/errors";
+import { AppError } from "../shared/errors.js";
 
 const errorPlugin = async (fastify: FastifyInstance) => {
   fastify.setErrorHandler((err: FastifyError, request: FastifyRequest, reply: FastifyReply) => {

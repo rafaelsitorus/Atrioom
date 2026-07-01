@@ -2,7 +2,7 @@
 // Admin: service-role, HANYA dipakai di server (lewati RLS, bypass auth).
 // User : anon-key + JWT user, dipakai ketika ingin RLS aktif.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { env } from "./env";
+import { env } from "./env.js";
 
 let adminCached: SupabaseClient | null = null;
 
