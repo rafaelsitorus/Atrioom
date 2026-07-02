@@ -14,6 +14,7 @@ import checkinRoutes from "./modules/checkin/checkin.routes.js";
 import publicTicketRoutes from "./modules/checkin/public-ticket.route.js";
 import offlineRoutes from "./modules/offline/offline.routes.js";
 import reportingRoutes from "./modules/reporting/reporting.routes.js";
+import debugRoutes from "./modules/debug/debug.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -58,6 +59,7 @@ export async function buildApp() {
   await app.register(publicTicketRoutes);
   await app.register(offlineRoutes);
   await app.register(reportingRoutes);
+  await app.register(debugRoutes);
 
   return app;
 }

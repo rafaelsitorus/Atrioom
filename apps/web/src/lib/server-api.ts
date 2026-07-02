@@ -11,26 +11,36 @@ import { ApiError } from "./api-client";
 function buildCookieHeader(): string {
   // Gabungan cookies dari next/headers + raw 'cookie' header
   // (fallback untuk environment tertentu).
-  const cookieStore = cookies();
   const parts: string[] = [];
+  const debugInfo: Record<string, unknown> = {};
 
   // Method 1: cookies() — official API, works di Vercel
   try {
-    cookieStore.getAll().forEach((c) => {
+    const cookieStore = cookies();
+    const all = cookieStore.getAll();
+    debugInfo.cookies_api_count = all.length;
+    debugInfo.cookies_api_names = all.map((c) => c.name);
+    all.forEach((c) => {
       parts.push(`${c.name}=${c.value}`);
     });
-  } catch {
-    // Skip kalau bukan Server Component context
+  } catch (e) {
+    debugInfo.cookies_api_error = String(e);
   }
 
   // Method 2: raw 'cookie' header fallback (beberapa env Vercel)
   if (parts.length === 0) {
     try {
       const raw = nextHeaders().get("cookie");
+      debugInfo.raw_cookie_present = !!raw;
       if (raw) return raw;
-    } catch {
-      // ignore
+    } catch (e) {
+      debugInfo.raw_cookie_error = String(e);
     }
+  }
+
+  // Debug: jika tidak ada cookie, log ke response API
+  if (parts.length === 0 && process.env.NODE_ENV !== "production") {
+    console.warn("[server-api] NO COOKIES FOUND", JSON.stringify(debugInfo));
   }
 
   return parts.join("; ");
