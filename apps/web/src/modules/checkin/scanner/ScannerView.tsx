@@ -109,10 +109,58 @@ export function ScannerView({ eventId, deviceFingerprint }: Props) {
 
   function onManualSearch(e: React.FormEvent) {
     e.preventDefault();
-    if (!manualQuery.trim()) return;
-    const token = manualQuery.trim();
+    const query = manualQuery.trim();
+    if (!query) return;
     startManual(async () => {
-      await processScan(token);
+      // Heuristic: kalau input terlihat seperti QR token (hex 32 char, no spaces),
+      // kirim langsung ke /v1/events/:id/checkin dengan qrToken.
+      // Kalau input mengandung spasi atau huruf, treat sebagai nama — search guest dulu.
+      const looksLikeQrToken = /^[a-f0-9]{32}$/i.test(query);
+
+      if (looksLikeQrToken) {
+        await processScan(query);
+      } else {
+        // Search by nama
+        try {
+          const { api } = await import("@/lib/api-client");
+          const res = await api.get<{ rows: Array<{ id: string; full_name: string; qr_token: string; category: string }>; total: number }>(
+            `/v1/events/${eventId}/guests?search=${encodeURIComponent(query)}&limit=5`,
+          );
+          if (res.rows.length === 0) {
+            pushToast({
+              id: String(Date.now()),
+              kind: "error",
+              title: "Tidak ditemukan",
+              message: `Tidak ada tamu dengan nama "${query}".`,
+              ts: Date.now(),
+            });
+          } else if (res.rows.length === 1) {
+            // Auto check-in kalau cuma 1 hasil
+            const first = res.rows[0];
+            if (first) await processScan(first.qr_token);
+          } else {
+            // Multiple match — tampilkan pilihan
+            const first = res.rows[0];
+            pushToast({
+              id: String(Date.now()),
+              kind: "duplicate",
+              title: `${res.rows.length} tamu ditemukan`,
+              message: res.rows.map((r) => `${r.full_name} (${r.category})`).slice(0, 3).join(", "),
+              ts: Date.now(),
+            });
+            // Tetap proses hasil pertama
+            if (first) await processScan(first.qr_token);
+          }
+        } catch (e) {
+          pushToast({
+            id: String(Date.now()),
+            kind: "error",
+            title: "Gagal cari",
+            message: e instanceof Error ? e.message : "Error",
+            ts: Date.now(),
+          });
+        }
+      }
       setManualQuery("");
     });
   }
