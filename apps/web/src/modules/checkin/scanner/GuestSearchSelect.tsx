@@ -49,9 +49,14 @@ export function GuestSearchSelect({ eventId, onPick, disabled }: Props) {
         const res = await api.get<{ rows: GuestLite[]; total: number }>(
           `/v1/events/${eventId}/guests?search=${encodeURIComponent(query.trim())}&limit=20`,
         );
+        // Debug: log response untuk diagnosa kenapa dropdown kosong
+        // eslint-disable-next-line no-console
+        console.log("[GuestSearchSelect] search response:", { query, total: res.total, count: res.rows.length, sample: res.rows[0] });
         setResults(res.rows);
         setActiveIdx(0);
-      } catch {
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error("[GuestSearchSelect] search error:", e);
         setResults([]);
       } finally {
         setLoading(false);

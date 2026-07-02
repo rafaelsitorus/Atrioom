@@ -30,11 +30,18 @@ export async function buildApp() {
   // Security headers
   await app.register(helmet, { contentSecurityPolicy: false });
 
-  // CORS — izinkan web (Next.js) mengakses API
+  // CORS — izinkan web (Next.js) mengakses API.
+  // Support multiple Vercel domain aliases (branch + project alias).
+  // Format ALLOWED_ORIGINS: comma-separated, e.g.
+  //   "https://atrioom-web.vercel.app,https://atrioom-web-xyz.vercel.app"
   await app.register(cors, {
     origin: (origin, cb) => {
       if (!origin) return cb(null, true); // server-to-server / curl
       if (allowedOrigins.length === 0) return cb(null, true); // dev: allow all
+      // Allow any *.vercel.app subdomain (covers preview deployments)
+      if (origin.endsWith(".vercel.app") && allowedOrigins.some((o) => o.endsWith(".vercel.app"))) {
+        return cb(null, true);
+      }
       cb(null, allowedOrigins.includes(origin));
     },
     credentials: true,
