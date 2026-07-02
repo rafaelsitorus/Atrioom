@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import { createHash } from "node:crypto";
 import { serverApi } from "@/lib/server-api";
 import type { EventRow } from "@/lib/types";
@@ -22,17 +22,13 @@ export default async function ScannerPage({ params }: PageProps) {
   }
   if (!event) notFound();
 
-  // Generate device fingerprint dari cookie + UA + IP (sederhana, deterministik per device).
-  // Backend akan terima value ini untuk idempotency_key.
-  const cookieStore = await cookies();
+  // Generate device fingerprint deterministik dari UA + IP (tanpa set cookie
+  // di Server Component — tidak boleh). Setiap device dapat ID yang sama
+  // setiap kali akses scanner.
   const headerStore = await headers();
-  let deviceId = cookieStore.get("atrioom-device")?.value;
-  if (!deviceId) {
-    const ua = headerStore.get("user-agent") ?? "unknown";
-    const ip = headerStore.get("x-forwarded-for") ?? "local";
-    deviceId = createHash("sha256").update(`${ua}|${ip}|${id}`).digest("hex").slice(0, 32);
-    cookieStore.set("atrioom-device", deviceId, { maxAge: 60 * 60 * 24 * 365, path: "/" });
-  }
+  const ua = headerStore.get("user-agent") ?? "unknown";
+  const ip = headerStore.get("x-forwarded-for") ?? "local";
+  const deviceId = createHash("sha256").update(`${ua}|${ip}|${id}`).digest("hex").slice(0, 32);
 
   return (
     <section className="flex flex-col gap-4">
