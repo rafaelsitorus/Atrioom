@@ -1,6 +1,6 @@
 "use client";
 
-// ScannerView — orchestrates QrScanner + CheckInModal + manual search.
+// ScannerView — orchestrates QrScanner + CheckInModal + searchable guest select.
 // EPIC04: pakai useOfflineScan untuk tahan network failure.
 import { useState, useTransition, useEffect } from "react";
 import { QrScanner } from "./QrScanner";
@@ -8,6 +8,7 @@ import { CheckInModal } from "./CheckInModal";
 import { api, ApiError } from "@/lib/api-client";
 import { ToastStack, type ToastItem } from "./ToastStack";
 import { VipAlertChannel } from "./VipAlertChannel";
+import { GuestSearchSelect, type GuestLite } from "./GuestSearchSelect";
 import { useOfflineScan } from "@/modules/offline/useOfflineScan";
 import { runSyncOnce } from "@/modules/offline/sync-orchestrator";
 import type { CheckInConfirmation } from "@/lib/types-checkin";
@@ -21,8 +22,6 @@ export function ScannerView({ eventId, deviceFingerprint }: Props) {
   const [paused, setPaused] = useState(false);
   const [confirmation, setConfirmation] = useState<CheckInConfirmation | null>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
-  const [manualQuery, setManualQuery] = useState("");
-  const [manualPending, startManual] = useTransition();
   const offlineScan = useOfflineScan({ eventId, deviceFingerprint });
 
   // Boot sync orchestrator (import side-effects) + periodic re-sync
@@ -107,62 +106,9 @@ export function ScannerView({ eventId, deviceFingerprint }: Props) {
     setPaused(false);
   }
 
-  function onManualSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const query = manualQuery.trim();
-    if (!query) return;
-    startManual(async () => {
-      // Heuristic: kalau input terlihat seperti QR token (hex 32 char, no spaces),
-      // kirim langsung ke /v1/events/:id/checkin dengan qrToken.
-      // Kalau input mengandung spasi atau huruf, treat sebagai nama — search guest dulu.
-      const looksLikeQrToken = /^[a-f0-9]{32}$/i.test(query);
-
-      if (looksLikeQrToken) {
-        await processScan(query);
-      } else {
-        // Search by nama
-        try {
-          const { api } = await import("@/lib/api-client");
-          const res = await api.get<{ rows: Array<{ id: string; full_name: string; qr_token: string; category: string }>; total: number }>(
-            `/v1/events/${eventId}/guests?search=${encodeURIComponent(query)}&limit=5`,
-          );
-          if (res.rows.length === 0) {
-            pushToast({
-              id: String(Date.now()),
-              kind: "error",
-              title: "Tidak ditemukan",
-              message: `Tidak ada tamu dengan nama "${query}".`,
-              ts: Date.now(),
-            });
-          } else if (res.rows.length === 1) {
-            // Auto check-in kalau cuma 1 hasil
-            const first = res.rows[0];
-            if (first) await processScan(first.qr_token);
-          } else {
-            // Multiple match — tampilkan pilihan
-            const first = res.rows[0];
-            pushToast({
-              id: String(Date.now()),
-              kind: "duplicate",
-              title: `${res.rows.length} tamu ditemukan`,
-              message: res.rows.map((r) => `${r.full_name} (${r.category})`).slice(0, 3).join(", "),
-              ts: Date.now(),
-            });
-            // Tetap proses hasil pertama
-            if (first) await processScan(first.qr_token);
-          }
-        } catch (e) {
-          pushToast({
-            id: String(Date.now()),
-            kind: "error",
-            title: "Gagal cari",
-            message: e instanceof Error ? e.message : "Error",
-            ts: Date.now(),
-          });
-        }
-      }
-      setManualQuery("");
-    });
+  function onPickGuest(guest: GuestLite) {
+    // Trigger check-in pakai QR token dari guest yang dipilih dari dropdown
+    void processScan(guest.qr_token);
   }
 
   return (
@@ -190,33 +136,21 @@ export function ScannerView({ eventId, deviceFingerprint }: Props) {
             <QrScanner onResult={(r) => processScan(r.text)} paused={paused} />
           </div>
 
-          {/* Manual search */}
+          {/* Manual search — searchable dropdown */}
           <div className="lg:col-span-2">
             <div className="heavy-frosted-glass flex h-full flex-col rounded-3xl p-6">
-              <p className="text-[10px] uppercase tracking-[0.4em] text-white/40">Manual Search</p>
+              <p className="text-[10px] uppercase tracking-[0.4em] text-white/40">Manual Check-In</p>
               <h3 className="mt-2 font-heading text-2xl text-white">Cari Tamu</h3>
               <p className="mt-2 text-xs text-white/40">
-                Ketik nama atau tempel QR token bila kamera gagal.
+                Ketik nama, pilih dari daftar, atau tekan Enter untuk check-in.
               </p>
 
-              <form onSubmit={onManualSearch} className="mt-6 flex flex-col gap-3">
-                <input
-                  value={manualQuery}
-                  onChange={(e) => setManualQuery(e.target.value)}
-                  placeholder="Nama tamu atau 64-char QR token…"
-                  className="rounded-full border border-cockpit-10 bg-white/5 px-5 py-3 font-body text-sm text-white placeholder:text-white/30 focus:border-white/40 focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  disabled={manualPending || !manualQuery.trim()}
-                  className="rounded-full border border-cockpit-20 bg-white text-black px-5 py-3 text-xs uppercase tracking-[0.2em] transition hover:bg-white/90 disabled:opacity-50"
-                >
-                  {manualPending ? "Mencari…" : "Cek-In Manual"}
-                </button>
-              </form>
+              <div className="mt-6">
+                <GuestSearchSelect eventId={eventId} onPick={onPickGuest} />
+              </div>
 
               <div className="mt-auto pt-6 text-[10px] text-white/30">
-                Tombol "Cek-In Manual" mengirim QR token langsung ke API.
+                Pilih tamu dari daftar — QR token mereka dipakai otomatis.
               </div>
             </div>
           </div>
