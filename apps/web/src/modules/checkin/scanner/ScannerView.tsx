@@ -16,9 +16,11 @@ import type { CheckInConfirmation } from "@/lib/types-checkin";
 interface Props {
   eventId: string;
   deviceFingerprint: string;
+  guests: import("./GuestSearchSelect").GuestLite[];
+  guestsError: string | null;
 }
 
-export function ScannerView({ eventId, deviceFingerprint }: Props) {
+export function ScannerView({ eventId, deviceFingerprint, guests, guestsError }: Props) {
   const [paused, setPaused] = useState(false);
   const [confirmation, setConfirmation] = useState<CheckInConfirmation | null>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -146,7 +148,7 @@ export function ScannerView({ eventId, deviceFingerprint }: Props) {
               </p>
 
               <div className="mt-6">
-                <GuestSearchSelect eventId={eventId} onPick={onPickGuest} />
+                <GuestSearchSelect guests={guests} onPick={onPickGuest} loadError={guestsError} />
               </div>
 
               <div className="mt-auto pt-6 text-[10px] text-white/30">

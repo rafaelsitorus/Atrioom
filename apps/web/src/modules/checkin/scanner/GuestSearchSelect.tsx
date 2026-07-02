@@ -1,9 +1,8 @@
 "use client";
 
-// Searchable Guest Select — load semua guest event sekali, filter client-side.
-// Lebih reliable daripada API call per keystroke (no CORS, no debounce).
+// Searchable Guest Select — terima initial data dari parent (Server Component
+// yang sudah pre-fetch dengan cookie auth). Filter & sort client-side.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { api } from "@/lib/api-client";
 
 export interface GuestLite {
   id: string;
@@ -14,9 +13,10 @@ export interface GuestLite {
 }
 
 interface Props {
-  eventId: string;
+  guests: GuestLite[];        // pre-fetched by parent
   onPick: (guest: GuestLite) => void;
   disabled?: boolean;
+  loadError?: string | null;
 }
 
 const CATEGORY_STYLES: Record<string, string> = {
@@ -27,53 +27,30 @@ const CATEGORY_STYLES: Record<string, string> = {
   STAFF: "text-emerald-300/80",
 };
 
-export function GuestSearchSelect({ eventId, onPick, disabled }: Props) {
-  const [allGuests, setAllGuests] = useState<GuestLite[]>([]);
+export function GuestSearchSelect({ guests, onPick, disabled, loadError }: Props) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load semua guests sekali di mount
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        // Ambil dalam chunk 1000 (limit API). Untuk event <1000 guests,
-        // 1 call cukup. Untuk >1000, perlu pagination — handle di iterasi berikut.
-        const res = await api.get<{ rows: GuestLite[]; total: number }>(
-          `/v1/events/${eventId}/guests?limit=1000`,
-        );
-        if (!alive) return;
-        // Sort by full_name untuk konsistensi
-        const sorted = [...res.rows].sort((a, b) =>
-          a.full_name.localeCompare(b.full_name, "id", { sensitivity: "base" }),
-        );
-        setAllGuests(sorted);
-        setLoaded(true);
-      } catch (e) {
-        if (!alive) return;
-        setLoadError(e instanceof Error ? e.message : "Gagal memuat daftar tamu");
-        setLoaded(true);
-      }
-    })();
-    return () => { alive = false; };
-  }, [eventId]);
+  // Pre-sort guests by name (server should also sort, but ensure here)
+  const sortedGuests = useMemo(
+    () => [...guests].sort((a, b) => a.full_name.localeCompare(b.full_name, "id", { sensitivity: "base" })),
+    [guests],
+  );
 
   // Filter client-side
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return allGuests.slice(0, 50); // show 50 first
-    return allGuests
+    if (!q) return sortedGuests.slice(0, 50);
+    return sortedGuests
       .filter((g) =>
         g.full_name.toLowerCase().includes(q) ||
         g.category.toLowerCase().includes(q),
       )
       .slice(0, 50);
-  }, [allGuests, query]);
+  }, [sortedGuests, query]);
 
   // Reset active index saat query/results berubah
   useEffect(() => {
@@ -121,18 +98,12 @@ export function GuestSearchSelect({ eventId, onPick, disabled }: Props) {
         onFocus={() => setOpen(true)}
         onBlur={onInputBlur}
         onKeyDown={onKeyDown}
-        placeholder={
-          !loaded
-            ? "Memuat daftar tamu…"
-            : loadError
-              ? "Gagal memuat"
-              : "Cari nama tamu…"
-        }
+        placeholder={loadError ? "Gagal memuat" : "Cari nama tamu…"}
         disabled={disabled}
         className="w-full rounded-full border border-cockpit-10 bg-white/5 px-5 py-3 font-body text-sm text-white placeholder:text-white/30 focus:border-white/40 focus:outline-none"
       />
 
-      {open && !loadError && loaded && (
+      {open && !loadError && (
         <div
           onMouseDown={(e) => e.preventDefault()} /* keep focus on input */
           className="absolute left-0 right-0 top-full z-20 mt-2 max-h-80 overflow-y-auto rounded-2xl border border-cockpit-10 bg-black/95 backdrop-blur-md"

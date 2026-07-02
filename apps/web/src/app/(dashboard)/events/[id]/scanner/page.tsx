@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { createHash } from "node:crypto";
 import { serverApi } from "@/lib/server-api";
 import type { EventRow } from "@/lib/types";
+import type { GuestLite } from "@/modules/checkin/scanner/GuestSearchSelect";
 import { ScannerView } from "@/modules/checkin/scanner/ScannerView";
 
 export const metadata = { title: "Scanner — Atrioom" };
@@ -15,10 +16,21 @@ export default async function ScannerPage({ params }: PageProps) {
   const { id } = await params;
 
   let event: EventRow | null = null;
+  let guests: GuestLite[] = [];
+  let guestsError: string | null = null;
   try {
     event = await serverApi.get<EventRow>(`/v1/events/${id}`);
-  } catch {
-    notFound();
+    // Pre-fetch guests di Server Component — cookie auth otomatis forward.
+    // GuestSearchSelect (Client) terima data ini via prop, tidak perlu
+    // fetch lagi (no CORS issue).
+    const res = await serverApi.get<{ rows: GuestLite[]; total: number }>(
+      `/v1/events/${id}/guests?limit=1000`,
+    );
+    guests = res.rows;
+  } catch (e) {
+    if (!event) notFound();
+    // Event OK, guests gagal
+    guestsError = e instanceof Error ? e.message : "Gagal memuat tamu";
   }
   if (!event) notFound();
 
@@ -49,7 +61,7 @@ export default async function ScannerPage({ params }: PageProps) {
         </div>
       </header>
 
-      <ScannerView eventId={id} deviceFingerprint={deviceId} />
+      <ScannerView eventId={id} deviceFingerprint={deviceId} guests={guests} guestsError={guestsError} />
     </section>
   );
 }
