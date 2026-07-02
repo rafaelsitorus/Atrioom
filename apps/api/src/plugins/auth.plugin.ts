@@ -12,7 +12,8 @@ import { UnauthorizedError } from "../shared/errors.js";
 /**
  * Extract access token dari cookie Supabase PKCE.
  * Cookie name pattern: `sb-<project-ref>-auth-token`.
- * Value-nya JSON-encoded: { access_token, refresh_token, expires_at, ... }.
+ * Format @supabase/ssr v0.5+ : "base64-" + base64(JSON.stringify(session))
+ * Format lama: URL-encoded JSON string.
  */
 function extractTokenFromCookie(cookieHeader: string | undefined): string | null {
   if (!cookieHeader) return null;
@@ -23,13 +24,24 @@ function extractTokenFromCookie(cookieHeader: string | undefined): string | null
     const eq = trimmed.indexOf("=");
     if (eq < 0) continue;
     const rawValue = decodeURIComponent(trimmed.slice(eq + 1));
+
+    // Format 1: "base64-<base64-of-JSON>" (Supabase SSR v0.5+)
+    if (rawValue.startsWith("base64-")) {
+      try {
+        const decoded = Buffer.from(rawValue.slice(7), "base64").toString("utf8");
+        const parsed = JSON.parse(decoded) as { access_token?: string };
+        if (parsed.access_token) return parsed.access_token;
+      } catch {
+        // Fall through ke Format 2
+      }
+    }
+
+    // Format 2: URL-encoded JSON (Supabase SSR older)
     try {
-      // Cookie value is JSON-encoded (URL-encoded outer wrap)
       const parsed = JSON.parse(rawValue) as { access_token?: string };
       if (parsed.access_token) return parsed.access_token;
     } catch {
-      // Some Supabase versions store as plain JWT (base64url); try base64url
-      // decode prefix to validate. If it has 2 dots it's a JWT.
+      // Format 3: plain JWT
       if (rawValue.split(".").length === 3) return rawValue;
     }
   }
